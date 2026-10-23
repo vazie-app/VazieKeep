@@ -35,9 +35,11 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
       - run: scripts/build-core.sh apple
+      # One at a time: the core keeps at most 16 sessions open at once, and a slow runner running suites in parallel
+      # goes over that (the tests then fail with tooManySessions).
       - name: Swift package tests (calls the real Rust core)
         working-directory: apps/apple/KeepAppleKit
-        run: swift test
+        run: swift test --no-parallel
       - name: Generate Xcode project
         working-directory: apps/apple
         run: xcodegen generate

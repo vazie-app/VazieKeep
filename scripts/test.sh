@@ -10,7 +10,7 @@ run_area() {
       [[ "$(uname -s)" == "Darwin" ]] || { skip "apple needs macOS"; return; }
       step "apple tests"
       "$ROOT/scripts/build-core.sh" apple
-      (cd "$ROOT/apps/apple/KeepAppleKit" && swift test)
+      (cd "$ROOT/apps/apple/KeepAppleKit" && swift test --no-parallel)
       ;;
     desktop) step "desktop tests"; (cd "$ROOT/apps/desktop" && ./gradlew --console=plain test) ;;
     extension)

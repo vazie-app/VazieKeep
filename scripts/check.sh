@@ -19,7 +19,7 @@ run_area() {
       [[ "$(uname -s)" == "Darwin" ]] || { skip "apple needs macOS"; return; }
       step "apple: core xcframework, swift test, xcodebuild"
       "$ROOT/scripts/build-core.sh" apple
-      (cd "$ROOT/apps/apple/KeepAppleKit" && swift test)
+      (cd "$ROOT/apps/apple/KeepAppleKit" && swift test --no-parallel) # the core keeps at most 16 sessions open at once
       (cd "$ROOT/apps/apple" && xcodegen generate --quiet &&
         xcodebuild -project VazieKeep.xcodeproj -scheme VazieKeep-iOS -destination generic/platform=iOS \
           -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet build &&

@@ -54,7 +54,7 @@ jobs:
           VAZIE_KEEP_ORIGIN: ${{ secrets.VAZIE_KEEP_ORIGIN || 'https://keep.example.invalid' }}
           VAZIE_SITE_ORIGIN: ${{ secrets.VAZIE_SITE_ORIGIN || 'https://site.example.invalid' }}
       - run: pnpm run package
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: browser-extension-chromium
           path: apps/browser-extension/dist/*.zip

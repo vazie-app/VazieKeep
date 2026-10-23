@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "types": ["node", "chrome"],
+    "paths": {
+      "@keep-core-wasm/*": ["../../core/keep-core-wasm/pkg/*"]
+    },
+    "allowJs": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.content.config.ts",
+    "eslint.config.js",
+    "src/manifest.ts",
+    "src/global.d.ts",
+    "tests"
+  ]
+}

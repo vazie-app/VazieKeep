@@ -1,0 +1,38 @@
+name: core
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['core/**', 'shared/test-vectors/**', '.github/workflows/core.yml']
+  pull_request:
+    paths: ['core/**', 'shared/test-vectors/**', '.github/workflows/core.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: core
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup target add wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - name: Fuzzing build of keep-core compiles
+        run: cargo clippy -p keep-core --features fuzzing --locked -- -D warnings
+      - name: WASM target compiles
+        run: cargo build -p keep-core-wasm --target wasm32-unknown-unknown --locked

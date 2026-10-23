@@ -1,0 +1,8 @@
+[bindings.kotlin]
+package_name = "app.vazie.keep.core.ffi"
+cdylib_name = "keep_core_ffi"
+
+[bindings.swift]
+module_name = "KeepCoreBindings"
+ffi_module_name = "KeepCoreFFI"
+ffi_module_filename = "KeepCoreFFI"

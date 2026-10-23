@@ -1,0 +1,55 @@
+name: apple
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['apps/apple/**', 'core/**', 'shared/test-vectors/**', 'scripts/build-core.sh', '.github/workflows/apple.yml']
+  pull_request:
+    paths: ['apps/apple/**', 'core/**', 'shared/test-vectors/**', 'scripts/build-core.sh', '.github/workflows/apple.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      # The newest Xcode on the runner: an older Swift compiler crashes on code Xcode 27 builds.
+      - name: Select the newest Xcode
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+      - name: Install pinned Rust toolchain
+        working-directory: core
+        run: rustup toolchain install && rustup target add aarch64-apple-ios aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - run: scripts/build-core.sh apple
+      - name: Swift package tests (calls the real Rust core)
+        working-directory: apps/apple/KeepAppleKit
+        run: swift test
+      - name: Generate Xcode project
+        working-directory: apps/apple
+        run: xcodegen generate
+      - name: Build iOS app (unsigned)
+        working-directory: apps/apple
+        run: >-
+          xcodebuild -project VazieKeep.xcodeproj -scheme VazieKeep-iOS
+          -destination generic/platform=iOS -derivedDataPath build/DerivedData
+          CODE_SIGNING_ALLOWED=NO -quiet build
+      - name: Build macOS app (unsigned)
+        working-directory: apps/apple
+        run: >-
+          xcodebuild -project VazieKeep.xcodeproj -scheme VazieKeep-macOS
+          -destination platform=macOS,arch=arm64 -derivedDataPath build/DerivedData
+          CODE_SIGNING_ALLOWED=NO -quiet build

@@ -1,0 +1,4 @@
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+-keep class app.vazie.keep.core.ffi.** { *; }
+-dontwarn java.awt.**

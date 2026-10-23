@@ -1,0 +1,44 @@
+name: desktop
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['apps/desktop/**', 'core/**', 'shared/test-vectors/**', 'tooling/gradle/**', '.github/workflows/desktop.yml', '.github/actions/gradle/**']
+  pull_request:
+    paths: ['apps/desktop/**', 'core/**', 'shared/test-vectors/**', 'tooling/gradle/**', '.github/workflows/desktop.yml', '.github/actions/gradle/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: ./.github/actions/gradle
+        with:
+          project: apps/desktop
+      - name: Install pinned Rust toolchain
+        working-directory: core
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - run: ./gradlew --console=plain build

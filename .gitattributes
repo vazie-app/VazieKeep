@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+*.kdbx binary
+*.kdb binary
+*.keyx binary
+*.key binary
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.wasm binary
+
+**/pnpm-lock.yaml linguist-generated=true -diff
+**/Cargo.lock linguist-generated=true

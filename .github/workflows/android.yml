@@ -1,0 +1,56 @@
+name: android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['apps/android/**', 'core/**', 'shared/test-vectors/**', 'tooling/gradle/**', '.github/workflows/android.yml', '.github/actions/gradle/**']
+  pull_request:
+    paths: ['apps/android/**', 'core/**', 'shared/test-vectors/**', 'tooling/gradle/**', '.github/workflows/android.yml', '.github/actions/gradle/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: ./.github/actions/gradle
+        with:
+          project: apps/android
+      # The NDK the core-bridge pins (tooling/gradle/libs.versions.toml); the runner image does not carry it.
+      - name: Install the pinned NDK
+        working-directory: .
+        run: |
+          ndk="$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' tooling/gradle/libs.versions.toml)"
+          [ -n "$ndk" ] || { echo "::error::no android-ndk in tooling/gradle/libs.versions.toml"; exit 1; }
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$ndk" > /dev/null
+          echo "NDK $ndk installed"
+      - name: Install pinned Rust toolchain
+        working-directory: core
+        run: rustup toolchain install && rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-ndk
+      - run: ./gradlew --console=plain check assembleDebug
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-reports
+          path: apps/android/*/build/reports
+          retention-days: 7

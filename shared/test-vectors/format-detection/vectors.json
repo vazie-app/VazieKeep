@@ -1,0 +1,16 @@
+{
+  "suite": "format-detection",
+  "version": 1,
+  "description": "First 12 bytes of a vault file mapped to the format keep-core must report. Headers are synthetic; no vault content follows them.",
+  "vectors": [
+    { "name": "kdbx-4.1", "header_hex": "03d9a29a67fb4bb501000400", "expected": { "kind": "kdbx", "major": 4, "minor": 1 } },
+    { "name": "kdbx-4.0", "header_hex": "03d9a29a67fb4bb500000400", "expected": { "kind": "kdbx", "major": 4, "minor": 0 } },
+    { "name": "kdbx-3.1", "header_hex": "03d9a29a67fb4bb501000300", "expected": { "kind": "kdbx", "major": 3, "minor": 1 } },
+    { "name": "kdbx-future-major", "header_hex": "03d9a29a67fb4bb500000500", "expected": { "kind": "kdbx", "major": 5, "minor": 0 } },
+    { "name": "keepass-1.x", "header_hex": "03d9a29a65fb4bb5", "expected": { "kind": "keepass1" } },
+    { "name": "kdbx-truncated-version", "header_hex": "03d9a29a67fb4bb50100", "expected": { "kind": "unknown" } },
+    { "name": "signature-only", "header_hex": "03d9a29a", "expected": { "kind": "unknown" } },
+    { "name": "zip-archive", "header_hex": "504b030414000000", "expected": { "kind": "unknown" } },
+    { "name": "empty", "header_hex": "", "expected": { "kind": "unknown" } }
+  ]
+}

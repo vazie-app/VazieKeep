@@ -1,0 +1,148 @@
+@font-face {
+  font-family: 'Geologica';
+  font-weight: 400;
+  font-display: swap;
+  src: url('@fonts/Geologica-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Geologica';
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fonts/Geologica-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Geologica';
+  font-weight: 600;
+  font-display: swap;
+  src: url('@fonts/Geologica-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Geologica';
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fonts/Geologica-Display.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Martian Mono';
+  font-weight: 400;
+  font-display: swap;
+  src: url('@fonts/MartianMono-Regular.ttf') format('truetype');
+}
+
+:root {
+  color-scheme: dark;
+  --background: #121014;
+  --surface-list: #1a161d;
+  --surface-field: #231e27;
+  --surface-raised: #2d2732;
+  --surface-toast: #393140;
+  --text: #f2ece4;
+  --text-secondary: #b9afbb;
+  --text-tertiary: #958b98;
+  --accent: #c9b6f2;
+  --accent-container: #3a2f4f;
+  --on-accent-container: #e8deff;
+  --action: #f1e3c8;
+  --on-action: #2a2018;
+  --caution: #e9a77e;
+  --danger: #f2a9a1;
+  --hairline: rgb(255 255 255 / 7%);
+  --shadow: rgb(0 0 0 / 45%);
+  --scrim: rgb(0 0 0 / 55%);
+  --mono-clay: #3b271f;
+  --mono-clay-on: #efb896;
+  --mono-rose: #3a2131;
+  --mono-rose-on: #edb5cf;
+  --mono-violet: #302748;
+  --mono-violet-on: #d2c0f7;
+  --mono-green: #213229;
+  --mono-green-on: #a9d3ba;
+  --mono-gold: #342c1e;
+  --mono-gold-on: #e6ce9b;
+  --mono-blue: #1e2a3a;
+  --mono-blue-on: #aec7ea;
+
+  --radius-badge: 8px;
+  --radius-tile: 12px;
+  --radius-inner: 16px;
+  --radius-chip: 14px;
+  --radius-key: 18px;
+  --radius-field: 20px;
+  --radius-button: 22px;
+  --radius-card: 24px;
+  --radius-sheet: 28px;
+  --gutter: 16px;
+
+  --font: 'Geologica', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Martian Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: #faf8f4;
+  --surface-list: #fffefc;
+  --surface-field: #f1eee9;
+  --surface-raised: #e8e4de;
+  --surface-toast: #dcd7d0;
+  --text: #211a25;
+  --text-secondary: #5b5160;
+  --text-tertiary: #6b6170;
+  --accent: #5d43a8;
+  --accent-container: #e6ddfa;
+  --on-accent-container: #2b1a5c;
+  --action: #2a2030;
+  --on-action: #f6eedd;
+  --caution: #a6532e;
+  --danger: #a23b32;
+  --hairline: rgb(34 27 38 / 8%);
+  --shadow: rgb(52 36 70 / 16%);
+  --scrim: rgb(33 26 37 / 40%);
+  --mono-clay: #f6dfd2;
+  --mono-clay-on: #86421f;
+  --mono-rose: #f6dce7;
+  --mono-rose-on: #872d57;
+  --mono-violet: #e6ddfa;
+  --mono-violet-on: #4b3590;
+  --mono-green: #daeadf;
+  --mono-green-on: #2e5a40;
+  --mono-gold: #f1e5c9;
+  --mono-gold-on: #6a511c;
+  --mono-blue: #dce6f5;
+  --mono-blue-on: #2a4c7a;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme='system'] {
+    color-scheme: light;
+    --background: #faf8f4;
+    --surface-list: #fffefc;
+    --surface-field: #f1eee9;
+    --surface-raised: #e8e4de;
+    --surface-toast: #dcd7d0;
+    --text: #211a25;
+    --text-secondary: #5b5160;
+    --text-tertiary: #6b6170;
+    --accent: #5d43a8;
+    --accent-container: #e6ddfa;
+    --on-accent-container: #2b1a5c;
+    --action: #2a2030;
+    --on-action: #f6eedd;
+    --caution: #a6532e;
+    --danger: #a23b32;
+    --hairline: rgb(34 27 38 / 8%);
+    --shadow: rgb(52 36 70 / 16%);
+    --scrim: rgb(33 26 37 / 40%);
+    --mono-clay: #f6dfd2;
+    --mono-clay-on: #86421f;
+    --mono-rose: #f6dce7;
+    --mono-rose-on: #872d57;
+    --mono-violet: #e6ddfa;
+    --mono-violet-on: #4b3590;
+    --mono-green: #daeadf;
+    --mono-green-on: #2e5a40;
+    --mono-gold: #f1e5c9;
+    --mono-gold-on: #6a511c;
+    --mono-blue: #dce6f5;
+    --mono-blue-on: #2a4c7a;
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "suite": "kdbx4-keyfiles",
+  "version": 1,
+  "description": "Synthetic KDBX 4 vaults protected by password, key file, or both, written by pykeepass 4.2.0 through tooling/test-vectors/generate_keyfiles.py. Key files are derived from fixed labels. All passwords, key files and contents are invented test data.",
+  "passwords": {
+    "standard": "correct horse battery staple",
+    "wrong": "Tr0ub4dor&3"
+  },
+  "key_files": {
+    "keyfile-v2.keyx": {
+      "format": "xml-v2",
+      "component": "d32f43a11ad6cb037003eea5fea574485579e1497e68eebe7daa5423e25e1d44"
+    },
+    "keyfile-v1.key": {
+      "format": "xml-v1",
+      "component": "990173533affdc2edbb9d71d0bfd2220fcc86b6e4424f33fdb346a4df20ec85c"
+    },
+    "keyfile-binary32.key": {
+      "format": "binary-32",
+      "component": "02e5caf58ee0412b9468f9787727819e596bd7c907c2aa3c295cc0d1007dd40b"
+    },
+    "keyfile-hex64.key": {
+      "format": "hex-64",
+      "component": "91fe37b03a68034c41b63cc15868f1606c49b56d14ab8cc21ddefd694da17277"
+    },
+    "keyfile-hashed.bin": {
+      "format": "hashed",
+      "component": "2384d32f431387609c8e508f4e523dee203325635ebf51da4416af8fdacb5753"
+    },
+    "keyfile-wrong.keyx": {
+      "format": "xml-v2",
+      "component": "b6dc74fc1a6b99824f477a387a7f9fd139bdfc20245e686bb75eafa534d21982"
+    },
+    "keyfile-v2-bad-hash.keyx": {
+      "format": "xml-v2",
+      "error": "invalid_key_file"
+    }
+  },
+  "contents": {
+    "keyfile": {
+      "name": "Key File Vault",
+      "entries": [
+        {
+          "title": "Key File Entry",
+          "username": "kf-user",
+          "password": "kf-pass-synthetic",
+          "url": "https://keyfile.example.org"
+        }
+      ]
+    }
+  },
+  "vectors": [
+    {
+      "file": "vault-password-only.kdbx",
+      "password": "standard",
+      "key_file": null,
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-password-only.kdbx",
+      "password": "wrong",
+      "key_file": null,
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-password-only.kdbx",
+      "password": "standard",
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-keyfile-only.kdbx",
+      "password": null,
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-keyfile-only.kdbx",
+      "password": null,
+      "key_file": "keyfile-wrong.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-keyfile-only.kdbx",
+      "password": "standard",
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-keyfile-only.kdbx",
+      "password": null,
+      "key_file": "keyfile-v2-bad-hash.keyx",
+      "expect": {
+        "error": "invalid_key_file"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": "standard",
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": "wrong",
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": "standard",
+      "key_file": "keyfile-wrong.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": "standard",
+      "key_file": null,
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": null,
+      "key_file": "keyfile-v2.keyx",
+      "expect": {
+        "error": "invalid_credentials"
+      }
+    },
+    {
+      "file": "vault-password-plus-keyfile.kdbx",
+      "password": null,
+      "key_file": null,
+      "expect": {
+        "error": "missing_credentials"
+      }
+    },
+    {
+      "file": "vault-keyfile-xml-v1.kdbx",
+      "password": null,
+      "key_file": "keyfile-v1.key",
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-keyfile-binary32.kdbx",
+      "password": null,
+      "key_file": "keyfile-binary32.key",
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-keyfile-hex64.kdbx",
+      "password": null,
+      "key_file": "keyfile-hex64.key",
+      "expect": {
+        "contents": "keyfile"
+      }
+    },
+    {
+      "file": "vault-keyfile-hashed.kdbx",
+      "password": null,
+      "key_file": "keyfile-hashed.bin",
+      "expect": {
+        "contents": "keyfile"
+      }
+    }
+  ]
+}

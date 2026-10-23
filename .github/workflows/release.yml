@@ -1,0 +1,202 @@
+name: Release build
+
+# Builds, verifies and signs the Android release of Vazie Keep for a version tag (`v1.0.0`) and keeps the result as a
+# workflow artifact for the maintainer. It does NOT create a GitHub Release or publish anything: the maintainer reviews
+# the artifact and publishes the release by hand.
+#
+# Signing secrets live only in the `release` environment (VAZIE_KEYSTORE_BASE64, VAZIE_KEYSTORE_PASSWORD,
+# VAZIE_KEY_ALIAS, VAZIE_KEY_PASSWORD), and so do the backend addresses the build is given (VAZIE_ACCOUNT_ORIGIN,
+# VAZIE_KEEP_ORIGIN, VAZIE_SITE_ORIGIN). Protect it in the repository settings (Settings → Environments → release):
+# required reviewer — the maintainer; deployment tags — `v*` only. A pull request, a fork or a branch never reaches
+# these secrets.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  # Rebuilds an existing version tag with this workflow, for example after the workflow itself was fixed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to build, e.g. v1.0.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  # The version tag being built: the pushed tag, or the one named when the workflow is started by hand.
+  TAG: ${{ inputs.tag || github.ref_name }}
+  # The SHA-256 of the signing certificate every published Vazie Keep APK carries (CN=Vazie, OU=Application Signing,
+  # O=Vazovsky Development). A different key would make the release impossible to install over an existing one, so a
+  # mismatch stops the build.
+  EXPECTED_CERT_SHA256: fe4fff544cac1a77813dbaba304d35a2100999f9c4fe3b8bc0ab0ae21d867eb6
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: release
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - name: The tag is a version tag
+        working-directory: .
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::$TAG is not a version tag (vX.Y.Z)"; exit 1; }
+
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: ./.github/actions/gradle
+        with:
+          project: apps/android
+
+      # The NDK the core-bridge pins (tooling/gradle/libs.versions.toml); the runner image does not carry it.
+      - name: Install the pinned NDK
+        working-directory: .
+        run: |
+          ndk="$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' tooling/gradle/libs.versions.toml)"
+          [ -n "$ndk" ] || { echo "::error::no android-ndk in tooling/gradle/libs.versions.toml"; exit 1; }
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$ndk" > /dev/null
+          echo "NDK $ndk installed"
+
+      # No build cache in a release: everything is compiled from the tagged source.
+      - name: Install the pinned Rust toolchain
+        working-directory: core
+        run: rustup toolchain install && rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2
+        with:
+          tool: cargo-ndk
+
+      # A tag must describe the source it points at, otherwise the artifact and the version in the app disagree.
+      - name: The tag matches versionName, and CHANGELOG.md has its notes
+        working-directory: .
+        run: |
+          version="${TAG#v}"
+          declared=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' apps/android/app/build.gradle.kts)
+          [ "$version" = "$declared" ] || { echo "::error::tag $TAG does not match versionName $declared"; exit 1; }
+          notes="$RUNNER_TEMP/RELEASE_NOTES.md"
+          awk -v v="$version" '
+            $0 ~ "^## " v "( |$)" { found = 1; sub(/ \(not published yet\)/, ""); print; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$notes"
+          [ "$(wc -l < "$notes")" -gt 2 ] || { echo "::error::CHANGELOG.md has no section for $version"; exit 1; }
+          echo "NOTES=$notes" >> "$GITHUB_ENV"
+
+      # A tag build that cannot sign is a failure, not an unsigned release. The build reads the key from
+      # signKeystore/keystore.properties, the same file a local release build uses.
+      - name: Place the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.VAZIE_KEYSTORE_BASE64 }}
+          VAZIE_KEYSTORE_PASSWORD: ${{ secrets.VAZIE_KEYSTORE_PASSWORD }}
+          VAZIE_KEY_ALIAS: ${{ secrets.VAZIE_KEY_ALIAS }}
+          VAZIE_KEY_PASSWORD: ${{ secrets.VAZIE_KEY_PASSWORD }}
+        run: |
+          missing=""
+          for name in KEYSTORE_BASE64 VAZIE_KEYSTORE_PASSWORD VAZIE_KEY_ALIAS VAZIE_KEY_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          [ -z "$missing" ] || { echo "::error::signing secrets are missing from the release environment:$missing"; exit 1; }
+          umask 077
+          keystore="$RUNNER_TEMP/vazie-keep-release.p12"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+          mkdir -p signKeystore
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$keystore" "$VAZIE_KEYSTORE_PASSWORD" "$VAZIE_KEY_ALIAS" "$VAZIE_KEY_PASSWORD" > signKeystore/keystore.properties
+
+      - name: Check, build and sign
+        env:
+          VAZIE_ACCOUNT_ORIGIN: ${{ secrets.VAZIE_ACCOUNT_ORIGIN }}
+          VAZIE_KEEP_ORIGIN: ${{ secrets.VAZIE_KEEP_ORIGIN }}
+          VAZIE_SITE_ORIGIN: ${{ secrets.VAZIE_SITE_ORIGIN }}
+        run: ./gradlew --no-daemon --console=plain check :app:assembleRelease :app:lintRelease
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/vazie-keep-release.p12" signKeystore/keystore.properties
+
+      # The APK: a valid signature by the certificate users already have.
+      - name: Verify the signature
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          apk=app/build/outputs/apk/release/app-release.apk
+          "$apksigner" verify --min-sdk-version 26 "$apk"
+          # "Signer #1 certificate SHA-256 digest: …" or, in newer build-tools, "V2 Signer: certificate SHA-256 digest: …";
+          # every scheme must name the one expected certificate.
+          cert=$("$apksigner" verify --print-certs "$apk" | sed -n 's/.*certificate SHA-256 digest: //p' | sort -u)
+          [ "$cert" = "$EXPECTED_CERT_SHA256" ] || { echo "::error::$apk is signed by '$cert', expected $EXPECTED_CERT_SHA256"; exit 1; }
+          echo "signature OK"
+
+      # A release trusts exactly the production Keep+ lease keys, talks to the production hosts and has no developer
+      # sign-in; nothing of a debug or QA build may reach it.
+      - name: Verify what the release trusts and talks to
+        env:
+          VAZIE_ACCOUNT_ORIGIN: ${{ secrets.VAZIE_ACCOUNT_ORIGIN }}
+          VAZIE_KEEP_ORIGIN: ${{ secrets.VAZIE_KEEP_ORIGIN }}
+          VAZIE_SITE_ORIGIN: ${{ secrets.VAZIE_SITE_ORIGIN }}
+        run: |
+          config=app/build/generated/source/buildConfig/release/app/vazie/keep/BuildConfig.java
+          expected="$(grep -v '^[[:space:]]*#' ../../shared/keep-lease/production-keys.txt | tr -d ' \r' | sed '/^$/d' | paste -sd, -)"
+          [ -n "$expected" ] || { echo "::error::shared/keep-lease/production-keys.txt names no key"; exit 1; }
+          check() { grep -qF "$1" "$config" || { echo "::error::BuildConfig lacks: $1"; exit 1; }; }
+          check "KEEP_LEASE_KEYS = \"$expected\";"
+          check 'DEV_SIGN_IN = false;'
+          # The addresses are secrets: the log masks them, and a mismatch names only the variable.
+          for name in VAZIE_ACCOUNT_ORIGIN VAZIE_KEEP_ORIGIN VAZIE_SITE_ORIGIN; do
+            value="${!name%/}"
+            [[ "$value" == https://* ]] || { echo "::error::$name is missing from the release environment or is not https"; exit 1; }
+            grep -qF "$name = \"$value\";" "$config" || { echo "::error::BuildConfig has a different $name"; exit 1; }
+          done
+          dex="$(mktemp -d)"
+          unzip -q app/build/outputs/apk/release/app-release.apk 'classes*.dex' -d "$dex"
+          for s in 'qa-1:' 'http://localhost:8080' 'http://127.0.0.1:8080' 'http://localhost:3010'; do
+            if cat "$dex"/classes*.dex | LC_ALL=C grep -a -q -F "$s"; then echo "::error::the APK contains $s"; exit 1; fi
+          done
+          echo "production keys and hosts only"
+
+      - name: Checksums and release notes
+        run: |
+          version="${TAG#v}"
+          out="$RUNNER_TEMP/vazie-keep-$TAG"
+          mkdir -p "$out"
+          cp app/build/outputs/apk/release/app-release.apk "$out/VazieKeep-$version.apk"
+          cp "$NOTES" "$out/RELEASE_NOTES.md"
+          ( cd "$out" && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt )
+          echo "SIGNING_CERT_SHA256=$EXPECTED_CERT_SHA256" > "$out/SIGNING_CERTIFICATE.txt"
+          printf 'source=%s/%s\ncommit=%s\ntag=%s\nbuilt=%s by the release workflow\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$TAG" "$(date -u +%Y-%m-%dT%H:%MZ)" > "$out/BUILD_INFO.txt"
+          echo "OUT=$out" >> "$GITHUB_ENV"
+
+      - name: Keep the artifacts for review
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vazie-keep-${{ env.TAG }}
+          path: ${{ env.OUT }}
+          retention-days: 30
+          if-no-files-found: error
+
+      # R8 mapping and native symbols, to read crash stack traces a user sends; never published with the APK.
+      - name: Keep mapping and symbols
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vazie-keep-${{ env.TAG }}-diagnostics
+          path: |
+            apps/android/app/build/outputs/mapping/release/mapping.txt
+            apps/android/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip
+          retention-days: 90
+          if-no-files-found: warn

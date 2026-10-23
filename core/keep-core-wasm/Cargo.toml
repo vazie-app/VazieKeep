@@ -1,0 +1,23 @@
+[package]
+name = "keep-core-wasm"
+description = "wasm-bindgen boundary exposing keep-core sessions to the browser extension."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+getrandom = { workspace = true, features = ["wasm_js"] }
+js-sys.workspace = true
+keep-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen.workspace = true
+zeroize.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,36 @@
+name: Gradle
+description: Sets up the pinned Gradle for one build, generates its wrapper jar (not committed) and validates it.
+
+inputs:
+  project:
+    description: Directory of the Gradle build (apps/android or apps/desktop).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Read the pinned Gradle version
+      id: pinned
+      shell: bash
+      run: |
+        props="${{ inputs.project }}/gradle/wrapper/gradle-wrapper.properties"
+        version="$(sed -n 's#^distributionUrl=.*/gradle-\(.*\)-bin\.zip$#\1#p' "$props")"
+        [ -n "$version" ] || { echo "::error::no Gradle version in $props"; exit 1; }
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - uses: gradle/actions/setup-gradle@v5
+      with:
+        gradle-version: ${{ steps.pinned.outputs.version }}
+        build-root-directory: ${{ inputs.project }}
+
+    # Generated in an empty directory so the project is not configured by a bare `gradle`.
+    - name: Generate the wrapper jar
+      shell: bash
+      run: |
+        dir="$(mktemp -d)"
+        touch "$dir/settings.gradle.kts"
+        gradle --no-daemon -q -p "$dir" wrapper --gradle-version "${{ steps.pinned.outputs.version }}"
+        cp "$dir/gradle/wrapper/gradle-wrapper.jar" "${{ inputs.project }}/gradle/wrapper/gradle-wrapper.jar"
+
+    # Checked against Gradle's published checksums before anything runs it.
+    - uses: gradle/actions/wrapper-validation@v5

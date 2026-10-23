@@ -1,0 +1,55 @@
+[package]
+name = "keep-core-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+keep-core = { path = "../keep-core", features = ["fuzzing"] }
+
+[workspace]
+
+[[bin]]
+name = "outer_header"
+path = "fuzz_targets/outer_header.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "inner_payload"
+path = "fuzz_targets/inner_payload.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "open_vault"
+path = "fuzz_targets/open_vault.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "session_inputs"
+path = "fuzz_targets/session_inputs.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "key_file"
+path = "fuzz_targets/key_file.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "xml_round_trip"
+path = "fuzz_targets/xml_round_trip.rs"
+test = false
+doc = false

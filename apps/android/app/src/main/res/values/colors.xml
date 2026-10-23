@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#FFFBF8F3</color>
+    <color name="window_background">#FFFAF8F4</color>
+    <!-- The launcher plates an icon can stand on (Appearance → Icon background): Milk (launcher_background above),
+         the icon's own signature field, and Ink. -->
+    <color name="launcher_plate_classic_start">#FF5A1F7A</color>
+    <color name="launcher_plate_classic_center">#FF2E1550</color>
+    <color name="launcher_plate_classic_end">#FF141A3E</color>
+    <color name="launcher_plate_blue_start">#FF00585C</color>
+    <color name="launcher_plate_blue_center">#FF003840</color>
+    <color name="launcher_plate_blue_end">#FF04212E</color>
+    <color name="launcher_plate_gray_start">#FF5E6878</color>
+    <color name="launcher_plate_gray_center">#FF3C4250</color>
+    <color name="launcher_plate_gray_end">#FF262A33</color>
+    <color name="launcher_plate_green_start">#FF005523</color>
+    <color name="launcher_plate_green_center">#FF0C3A00</color>
+    <color name="launcher_plate_green_end">#FF172B00</color>
+    <color name="launcher_plate_pink_start">#FF760037</color>
+    <color name="launcher_plate_pink_center">#FF4D002D</color>
+    <color name="launcher_plate_pink_end">#FF3A0128</color>
+    <color name="launcher_plate_red_start">#FF7A0F1E</color>
+    <color name="launcher_plate_red_center">#FF4E0A17</color>
+    <color name="launcher_plate_red_end">#FF2E0610</color>
+    <color name="launcher_plate_violet_start">#FF4A1585</color>
+    <color name="launcher_plate_violet_center">#FF25115E</color>
+    <color name="launcher_plate_violet_end">#FF071A3A</color>
+    <color name="launcher_plate_yellow_start">#FF453900</color>
+    <color name="launcher_plate_yellow_center">#FF342000</color>
+    <color name="launcher_plate_yellow_end">#FF251605</color>
+    <color name="launcher_plate_ink">#FF12111A</color>
+</resources>

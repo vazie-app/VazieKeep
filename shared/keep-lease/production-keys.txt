@@ -1,0 +1,3 @@
+# Keep+ lease public keys that release builds trust: kid:publicKey (raw Ed25519, base64url).
+# Public keys only. The matching private key lives in the production backend's environment.
+keep-lease-prod-2026-10:ogEqO2gioOtqkOvqYEX1pC6anJyJzCr7-Bmf0UfkyI4

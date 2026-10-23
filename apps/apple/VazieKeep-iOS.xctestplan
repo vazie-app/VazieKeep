@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "id": "6E2E5C1A-6A7B-4C35-9F0E-4B1E8E2C7A11",
+      "name": "Device",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "preferredScreenCaptureFormat": "screenshots",
+    "uiTestingScreenshotsLifetime": "keepNever"
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:VazieKeep.xcodeproj",
+        "identifier": "47FF3A6A18BFE7C265C4A3FF",
+        "name": "VazieKeep-iOSTests"
+      }
+    },
+    {
+      "target": {
+        "containerPath": "container:VazieKeep.xcodeproj",
+        "identifier": "5527F3A4D029E8FC6B908299",
+        "name": "VazieKeep-iOSUITests"
+      }
+    }
+  ],
+  "version": 1
+}

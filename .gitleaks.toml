@@ -1,0 +1,27 @@
+# gitleaks configuration: the default rules, minus synthetic test material.
+# Run it with `gitleaks git --redact` (history) or `gitleaks dir --redact` (working tree).
+title = "Vazie Keep"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Test vectors and fixtures: tokens, keys and vaults made only to test the core, signed with throwaway keys"
+paths = [
+  '''shared/test-vectors/''',
+  '''core/keep-core/tests/data/''',
+]
+
+[[allowlists]]
+description = "A constant inside a unit test: the RFC 4226 test secret"
+regexTarget = "match"
+regexes = [
+  '''GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ''',
+]
+
+[[allowlists]]
+description = "A unit test asserts that a generated key starts with a PEM header; the file holds no key"
+targetRules = ["private-key"]
+paths = [
+  '''core/keep-core/src/passkey\.rs''',
+]

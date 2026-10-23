@@ -33,7 +33,7 @@ jobs:
         with:
           tool: wasm-bindgen@0.2.129
       - run: ../../scripts/build-core.sh wasm
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: apps/browser-extension/package.json
       - uses: actions/setup-node@v5

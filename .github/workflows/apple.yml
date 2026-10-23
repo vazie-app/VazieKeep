@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # The newest Xcode on the runner: an older Swift compiler crashes on code Xcode 27 builds.
       - name: Select the newest Xcode
         run: |
